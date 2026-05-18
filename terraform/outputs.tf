@@ -3,6 +3,12 @@ output "ec2_public_ip" {
   description = "Public IP address of the backend EC2 instance"
 }
 
+output "ec2_instance_id" {
+  value       = aws_instance.backend.id
+  description = "EC2 instance ID for SSM deployment"
+}
+
+
 output "s3_bucket_name" {
   value       = aws_s3_bucket.frontend.bucket
   description = "S3 bucket name for the React frontend"

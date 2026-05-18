@@ -60,11 +60,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy Docker container on EC2 via SSH
+      - name: Deploy Docker container on EC2 via SSM
         env:
-          PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
           IMAGE_URI: ${{ needs.build-and-push.outputs.image_uri }}
@@ -72,33 +70,18 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          # Write private key to temp file and strip any Windows carriage returns (\r)
-          echo "$PRIVATE_KEY" | tr -d '\r' > /tmp/deploy_key.pem
-          chmod 600 /tmp/deploy_key.pem
-
-          # SSH into EC2 and deploy (with legacy RSA support enabled)
-          ssh -o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /tmp/deploy_key.pem $EC2_USER@$EC2_HOST << SSHEOF
-            # Authenticate Docker with ECR
-            aws ecr get-login-password --region $AWS_REGION | \
-              docker login --username AWS --password-stdin $ECR_REGISTRY
-
-            # Stop and remove old container if it exists
-            docker stop node_backend || true
-            docker rm node_backend || true
-
-            # Pull the new image and run it
-            docker pull $IMAGE_URI
-            docker run -d \
-              --name node_backend \
-              --restart always \
-              -p 5000:5000 \
-              -e DB_HOST=$DB_HOST \
-              -e DB_USER=admin \
-              -e DB_PASSWORD=$DB_PASSWORD \
-              -e DB_NAME=cloud_native_app \
-              -e JWT_SECRET=$JWT_SECRET \
-              $IMAGE_URI
-          SSHEOF
+          aws ssm send-command \
+            --region $AWS_REGION \
+            --instance-ids $EC2_INSTANCE_ID \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands='[
+              "aws ecr get-login-password --region '$AWS_REGION' | docker login --username AWS --password-stdin '$ECR_REGISTRY'",
+              "docker stop node_backend || true",
+              "docker rm node_backend || true",
+              "docker pull '$IMAGE_URI'",
+              "docker run -d --name node_backend --restart always -p 5000:5000 -e DB_HOST='$DB_HOST' -e DB_USER=admin -e DB_PASSWORD='$DB_PASSWORD' -e DB_NAME=cloud_native_app -e JWT_SECRET='$JWT_SECRET' '$IMAGE_URI'"
+            ]' \
+            --output text
 
   # ─────────────────────────────────────────
   # JOB 3 — Build & deploy React app to S3 + invalidate CloudFront
