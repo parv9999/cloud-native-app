@@ -1,0 +1,11 @@
+# Node
+node_modules/
+build/
+.env
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.pem
+.terraform.lock.hcl
