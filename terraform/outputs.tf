@@ -17,3 +17,9 @@ output "rds_endpoint" {
   value       = aws_db_instance.mysql.address
   description = "RDS MySQL endpoint to be used by the backend"
 }
+
+output "private_key_pem" {
+  value       = tls_private_key.pk.private_key_pem
+  description = "Private key for SSH access to EC2"
+  sensitive   = true
+}
