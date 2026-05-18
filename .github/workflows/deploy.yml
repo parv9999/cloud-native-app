@@ -72,12 +72,12 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          # Write private key to temp file with correct Unix line endings
-          echo "$PRIVATE_KEY" > /tmp/deploy_key.pem
+          # Write private key to temp file and strip any Windows carriage returns (\r)
+          echo "$PRIVATE_KEY" | tr -d '\r' > /tmp/deploy_key.pem
           chmod 600 /tmp/deploy_key.pem
 
-          # SSH into EC2 and deploy
-          ssh -o StrictHostKeyChecking=no -i /tmp/deploy_key.pem $EC2_USER@$EC2_HOST << SSHEOF
+          # SSH into EC2 and deploy (with legacy RSA support enabled)
+          ssh -o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -i /tmp/deploy_key.pem $EC2_USER@$EC2_HOST << SSHEOF
             # Authenticate Docker with ECR
             aws ecr get-login-password --region $AWS_REGION | \
               docker login --username AWS --password-stdin $ECR_REGISTRY
