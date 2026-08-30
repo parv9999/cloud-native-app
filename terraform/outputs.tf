@@ -19,6 +19,12 @@ output "cloudfront_url" {
   description = "CloudFront public URL for the frontend (HTTPS)"
 }
 
+output "cloudfront_distribution_id" {
+  value       = aws_cloudfront_distribution.frontend.id
+  description = "CloudFront Distribution ID for cache invalidation"
+}
+
+
 output "rds_endpoint" {
   value       = aws_db_instance.mysql.address
   description = "RDS MySQL endpoint to be used by the backend"
