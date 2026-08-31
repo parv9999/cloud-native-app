@@ -6,19 +6,26 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone_number, hostel_block } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields required" });
+      return res.status(400).json({ message: "All required fields must be provided" });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail.endsWith("@vitbhopal.ac.in")) {
+      return res.status(400).json({ 
+        message: "Registration restricted! You must use an official VIT Bhopal email address (@vitbhopal.ac.in)." 
+      });
     }
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const sql =
-      "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+      "INSERT INTO users (name, email, password, phone_number, hostel_block) VALUES (?, ?, ?, ?, ?)";
 
-    db.query(sql, [name, email, hashedPassword], (err, result) => {
+    db.query(sql, [name, cleanEmail, hashedPassword, phone_number || null, hostel_block || null], (err, result) => {
       if (err) {
         if (err.code === "ER_DUP_ENTRY") {
           return res.status(400).json({ message: "Email already registered! Please login instead." });
@@ -27,7 +34,7 @@ router.post("/register", async (req, res) => {
       }
 
       res.status(201).json({
-        message: "User registered successfully ✅"
+        message: "Registered successfully! Welcome to VIT Bhopal Marketplace ✅"
       });
     });
 
@@ -35,6 +42,7 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 module.exports = router;
 
