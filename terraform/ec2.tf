@@ -12,33 +12,11 @@ resource "aws_instance" "backend" {
 
   user_data = <<-EOF
               #!/bin/bash
-              # Update OS
-              yum update -y
-              
-              # Install Git and Docker
-              yum install -y git docker
-              
-              # Start and enable Docker service
+              apt-get update -y
+              apt-get install -y docker.io awscli git
               systemctl start docker
               systemctl enable docker
-              
-              # Add ec2-user to docker group
-              usermod -aG docker ec2-user
-              
-              # Clone your repository
-              git clone https://github.com/parv9999/cloud-native-app.git /home/ec2-user/app
-              cd /home/ec2-user/app/backend
-              
-              # Build the docker image
-              docker build -t my-backend .
-              
-              # Run the container (Make sure to pass the RDS database environment variables)
-              docker run -d -p 5000:5000 \
-               -e DB_HOST=${aws_db_instance.mysql.address} \
-               -e DB_USER=admin \
-               -e DB_PASSWORD=ParvRds123 \
-               -e DB_NAME=cloud_native_app \
-               -e JWT_SECRET=parvsupersecretkey123 \
-               my-backend
+              usermod -aG docker ubuntu
               EOF
+
 }
