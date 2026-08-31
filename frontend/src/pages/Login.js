@@ -13,10 +13,16 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await api.post("/auth/login", form);
-    localStorage.setItem("token", res.data.token);
-    alert("Login successful");
+    try {
+      const res = await api.post("/auth/login", form);
+      localStorage.setItem("token", res.data.token);
+      alert("Login successful ✅");
+      window.location.reload();
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || "Login failed");
+    }
   };
+
 
   return (
     <form onSubmit={handleSubmit}>

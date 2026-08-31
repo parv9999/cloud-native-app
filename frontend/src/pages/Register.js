@@ -14,9 +14,14 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await api.post("/auth/register", form);
-    alert("Registered successfully");
+    try {
+      const res = await api.post("/auth/register", form);
+      alert(res.data.message || "Registered successfully ✅");
+    } catch (err) {
+      alert(err.response?.data?.error || err.response?.data?.message || "Registration failed");
+    }
   };
+
 
   return (
     <form onSubmit={handleSubmit}>
