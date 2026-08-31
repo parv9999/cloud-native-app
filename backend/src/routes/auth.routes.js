@@ -20,6 +20,9 @@ router.post("/register", async (req, res) => {
 
     db.query(sql, [name, email, hashedPassword], (err, result) => {
       if (err) {
+        if (err.code === "ER_DUP_ENTRY") {
+          return res.status(400).json({ message: "Email already registered! Please login instead." });
+        }
         return res.status(500).json({ error: err.message });
       }
 
@@ -27,6 +30,7 @@ router.post("/register", async (req, res) => {
         message: "User registered successfully ✅"
       });
     });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
