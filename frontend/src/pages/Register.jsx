@@ -16,11 +16,6 @@ function Register({ onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email.trim().toLowerCase().endsWith("@vitbhopal.ac.in")) {
-      alert("⚠️ Registration is restricted to official VIT Bhopal email addresses ending in @vitbhopal.ac.in");
-      return;
-    }
-
     try {
       const res = await api.post("/auth/register", form);
       alert(res.data.message || "Registered successfully! ✅");
@@ -34,7 +29,7 @@ function Register({ onSuccess }) {
     <div className="auth-box">
       <h2 style={{ marginBottom: "8px" }}>🎓 Student Registration</h2>
       <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "20px" }}>
-        Exclusive peer-to-peer marketplace for VIT Bhopal students.
+        Campus marketplace for students to buy and sell.
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -48,12 +43,13 @@ function Register({ onSuccess }) {
         />
         <input
           name="email"
-          placeholder="College Email (e.g. name@vitbhopal.ac.in)"
+          placeholder="Email Address"
           value={form.email}
           onChange={handleChange}
           className="input-field"
           required
         />
+
         <input
           name="password"
           type="password"

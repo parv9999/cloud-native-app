@@ -13,14 +13,10 @@ router.post("/register", async (req, res) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail.endsWith("@vitbhopal.ac.in")) {
-      return res.status(400).json({ 
-        message: "Registration restricted! You must use an official VIT Bhopal email address (@vitbhopal.ac.in)." 
-      });
-    }
 
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
 
     const sql =
       "INSERT INTO users (name, email, password, phone_number, hostel_block) VALUES (?, ?, ?, ?, ?)";
