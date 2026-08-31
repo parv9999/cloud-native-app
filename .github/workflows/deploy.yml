@@ -122,9 +122,8 @@ jobs:
 
       - name: Build React app
         working-directory: ./frontend
-        env:
-          REACT_APP_API_URL: http://${{ secrets.EC2_HOST }}:5000
         run: npm run build
+
 
       - name: Sync build to S3 bucket
         run: |
