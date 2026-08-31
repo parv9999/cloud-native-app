@@ -70,18 +70,25 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
+          cat << EOF > /tmp/ssm_commands.json
+          {
+            "commands": [
+              "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}",
+              "docker stop node_backend || true",
+              "docker rm node_backend || true",
+              "docker pull ${IMAGE_URI}",
+              "docker run -d --name node_backend --restart always -p 5000:5000 -e DB_HOST=${DB_HOST} -e DB_USER=admin -e DB_PASSWORD=${DB_PASSWORD} -e DB_NAME=cloud_native_app -e JWT_SECRET=${JWT_SECRET} ${IMAGE_URI}"
+            ]
+          }
+          EOF
+
           aws ssm send-command \
             --region $AWS_REGION \
             --instance-ids $EC2_INSTANCE_ID \
             --document-name "AWS-RunShellScript" \
-            --parameters commands='[
-              "aws ecr get-login-password --region '$AWS_REGION' | docker login --username AWS --password-stdin '$ECR_REGISTRY'",
-              "docker stop node_backend || true",
-              "docker rm node_backend || true",
-              "docker pull '$IMAGE_URI'",
-              "docker run -d --name node_backend --restart always -p 5000:5000 -e DB_HOST='$DB_HOST' -e DB_USER=admin -e DB_PASSWORD='$DB_PASSWORD' -e DB_NAME=cloud_native_app -e JWT_SECRET='$JWT_SECRET' '$IMAGE_URI'"
-            ]' \
+            --parameters file:///tmp/ssm_commands.json \
             --output text
+
 
   # ─────────────────────────────────────────
   # JOB 3 — Build & deploy React app to S3 + invalidate CloudFront
